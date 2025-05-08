@@ -20,4 +20,6 @@ model Developer {
   password  String
   apiKey    String   @unique
   createdAt DateTime @default(now())
+
+  @@map("developer") // lowercase table name in the DB
 }
