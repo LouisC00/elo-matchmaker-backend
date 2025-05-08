@@ -21,5 +21,35 @@ model Developer {
   apiKey    String   @unique
   createdAt DateTime @default(now())
 
+  players Player[]
+
   @@map("developer") // lowercase table name in the DB
+}
+
+model Player {
+  id          Int       @id @default(autoincrement())
+  elo         Int       @default(1000)
+  developer   Developer @relation(fields: [developerId], references: [id])
+  developerId Int
+  createdAt   DateTime  @default(now())
+
+  matchesAsPlayer1 Match[] @relation("Player1")
+  matchesAsPlayer2 Match[] @relation("Player2")
+
+  @@map("player")
+}
+
+model Match {
+  id        Int    @id @default(autoincrement())
+  player1   Player @relation("Player1", fields: [player1Id], references: [id])
+  player1Id Int
+
+  player2   Player @relation("Player2", fields: [player2Id], references: [id])
+  player2Id Int
+
+  winnerId  Int?
+  createdAt DateTime @default(now())
+  roomCode  String   @unique
+
+  @@map("match")
 }
