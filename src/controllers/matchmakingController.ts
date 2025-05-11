@@ -1,23 +1,38 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { AuthenticatedRequest } from "../middleware/authMiddleware";
 import { v4 as uuidv4 } from "uuid";
 
 const prisma = new PrismaClient();
 let queue: { playerId: number; elo: number }[] = [];
 
 export const joinMatchmaking = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
+  const developerId = req.developerId;
   const { playerId } = req.body;
 
-  const player = await prisma.player.findUnique({ where: { id: playerId } });
+  if (!developerId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const player = await prisma.player.findUnique({
+    where: { id: playerId },
+  });
+
   if (!player) {
     res.status(404).json({ error: "Player not found" });
     return;
   }
 
-  // 嘗試找到配對
+  if (player.developerId !== developerId) {
+    res.status(403).json({ error: "Player does not belong to your account" });
+    return;
+  }
+
+  // 嘗試從 queue 找配對
   const matchIndex = queue.findIndex(
     (p) => Math.abs(p.elo - player.elo) < 100 && p.playerId !== playerId
   );
