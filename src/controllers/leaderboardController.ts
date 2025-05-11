@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
+import redis from "../lib/redis";
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,17 @@ export const getLeaderboard = async (
     return;
   }
 
+  const cacheKey = `leaderboard:${developerId}`;
+
+  // 1. Check if there's cache on redis
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    res.set("X-Cache", "HIT");
+    res.json({ leaderboard: JSON.parse(cached) });
+    return;
+  }
+
+  // 2. check database
   const players = await prisma.player.findMany({
     where: { developerId },
     orderBy: { elo: "desc" },
@@ -24,10 +36,14 @@ export const getLeaderboard = async (
     },
   });
 
-  res.json({
-    leaderboard: players.map((p) => ({
-      playerId: p.id,
-      elo: p.elo,
-    })),
-  });
+  const leaderboard = players.map((p) => ({
+    playerId: p.id,
+    elo: p.elo,
+  }));
+
+  // 3. load redis cache (limit 10 seconds)
+  await redis.set(cacheKey, JSON.stringify(leaderboard), "EX", 10);
+
+  res.set("X-Cache", "MISS");
+  res.json({ leaderboard });
 };
