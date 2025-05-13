@@ -37,7 +37,7 @@ export const getLeaderboard = async (
     },
   });
 
-  const leaderboard = players.map((p) => ({
+  const leaderboard = players.map((p: { id: number; elo: number }) => ({
     playerId: p.id,
     elo: p.elo,
   }));
