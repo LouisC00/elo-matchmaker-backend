@@ -19,18 +19,12 @@ export const getLeaderboard = async (
   const cacheKey = `leaderboard:${developerId}`;
 
   // 1. Check if there's cache on redis
-  const cached = await redis.get<string>(cacheKey);
+  const cached = await redis.get<{ playerId: number; elo: number }[]>(cacheKey);
 
   if (cached) {
-    try {
-      const data = JSON.parse(cached);
-      res.json({ leaderboard: data });
-      return;
-    } catch (err) {
-      console.error("Failed to parse cached leaderboard:", err);
-      // 若 Redis 內容錯誤，自動刪除
-      await redis.del(cacheKey);
-    }
+    res.set("X-Cache", "HIT");
+    res.json({ leaderboard: cached });
+    return;
   }
 
   // 2. check database
