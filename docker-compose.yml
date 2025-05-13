@@ -31,11 +31,8 @@ services:
     depends_on:
       - postgres
       - redis
-    environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/mydb
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      JWT_SECRET: your-secret-key
+    env_file:
+      - .env
     volumes:
       - .:/app
     command: npm run dev
