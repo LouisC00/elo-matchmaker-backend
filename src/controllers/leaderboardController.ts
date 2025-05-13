@@ -10,6 +10,11 @@ interface PlayerSummary {
   elo: number;
 }
 
+interface PlayerRow {
+  id: number;
+  elo: number;
+}
+
 export const getLeaderboard = async (
   req: AuthenticatedRequest,
   res: Response
@@ -45,7 +50,7 @@ export const getLeaderboard = async (
     },
   });
 
-  const leaderboard: PlayerSummary[] = players.map((p) => ({
+  const leaderboard: PlayerSummary[] = players.map((p: PlayerRow) => ({
     playerId: p.id,
     elo: p.elo,
   }));
