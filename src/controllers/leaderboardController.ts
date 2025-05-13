@@ -5,6 +5,11 @@ import redis from "../lib/redis";
 
 const prisma = new PrismaClient();
 
+interface PlayerSummary {
+  playerId: number;
+  elo: number;
+}
+
 export const getLeaderboard = async (
   req: AuthenticatedRequest,
   res: Response
@@ -18,16 +23,19 @@ export const getLeaderboard = async (
 
   const cacheKey = `leaderboard:${developerId}`;
 
-  // 1. Check if there's cache on redis
-  const cached = await redis.get<{ playerId: number; elo: number }[]>(cacheKey);
-
-  if (cached) {
-    res.set("X-Cache", "HIT");
-    res.json({ leaderboard: cached });
-    return;
+  try {
+    const cached = await redis.get<string>(cacheKey);
+    if (cached) {
+      const leaderboard: PlayerSummary[] = JSON.parse(cached);
+      res.set("X-Cache", "HIT");
+      res.json({ leaderboard });
+      return;
+    }
+  } catch (err) {
+    console.error("Redis cache parse error:", err);
+    await redis.del(cacheKey);
   }
 
-  // 2. check database
   const players = await prisma.player.findMany({
     where: { developerId },
     orderBy: { elo: "desc" },
@@ -37,12 +45,11 @@ export const getLeaderboard = async (
     },
   });
 
-  const leaderboard = players.map((p: { id: number; elo: number }) => ({
+  const leaderboard: PlayerSummary[] = players.map((p) => ({
     playerId: p.id,
     elo: p.elo,
   }));
 
-  // 3. load redis cache (limit 10 seconds)
   await redis.set(cacheKey, JSON.stringify(leaderboard), { ex: 10 });
 
   res.set("X-Cache", "MISS");
