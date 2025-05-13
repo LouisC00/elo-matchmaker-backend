@@ -22,8 +22,15 @@ export const getLeaderboard = async (
   const cached = await redis.get<string>(cacheKey);
 
   if (cached) {
-    res.json({ leaderboard: JSON.parse(cached) });
-    return;
+    try {
+      const data = JSON.parse(cached);
+      res.json({ leaderboard: data });
+      return;
+    } catch (err) {
+      console.error("Failed to parse cached leaderboard:", err);
+      // 若 Redis 內容錯誤，自動刪除
+      await redis.del(cacheKey);
+    }
   }
 
   // 2. check database
