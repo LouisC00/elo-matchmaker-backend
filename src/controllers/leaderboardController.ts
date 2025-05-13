@@ -19,9 +19,9 @@ export const getLeaderboard = async (
   const cacheKey = `leaderboard:${developerId}`;
 
   // 1. Check if there's cache on redis
-  const cached = await redis.get(cacheKey);
+  const cached = await redis.get<string>(cacheKey);
+
   if (cached) {
-    res.set("X-Cache", "HIT");
     res.json({ leaderboard: JSON.parse(cached) });
     return;
   }
@@ -42,7 +42,7 @@ export const getLeaderboard = async (
   }));
 
   // 3. load redis cache (limit 10 seconds)
-  await redis.set(cacheKey, JSON.stringify(leaderboard), "EX", 10);
+  await redis.set(cacheKey, JSON.stringify(leaderboard), { ex: 10 });
 
   res.set("X-Cache", "MISS");
   res.json({ leaderboard });
