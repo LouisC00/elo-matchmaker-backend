@@ -11,6 +11,9 @@ RUN npm install
 # 複製其餘檔案
 COPY . .
 
+# 編譯 TypeScript 前，先產生 Prisma Client
+RUN npx prisma generate
+
 # 編譯 TypeScript
 RUN npm run build
 
