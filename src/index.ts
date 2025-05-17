@@ -7,6 +7,7 @@ import playerRoutes from "./routes/playerRoutes";
 import leaderboardRoutes from "./routes/leaderboardRoutes";
 import matchResultRoutes from "./routes/matchResultRoutes";
 import meRoutes from "./routes/meRoutes";
+import matchRoutes from "./routes/matchRoutes";
 
 dotenv.config();
 const app = express();
@@ -18,6 +19,7 @@ app.use("/api", playerRoutes);
 app.use("/api", leaderboardRoutes);
 app.use("/api", matchResultRoutes);
 app.use("/api", meRoutes);
+app.use("/api", matchRoutes);
 
 app.get("/api/ping", (req, res) => {
   res.json({ message: "pong" });
