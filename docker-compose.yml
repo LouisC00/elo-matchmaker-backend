@@ -18,6 +18,7 @@ services:
     image: redis:7
     restart: always
     container_name: redis
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
 
