@@ -28,31 +28,23 @@ export const getLeaderboard = async (
   try {
     const cached = await redis.get<string>(cacheKey);
     if (cached) {
-      const leaderboard: PlayerSummary[] = JSON.parse(cached);
       res.set("X-Cache", "HIT");
-      res.json({ leaderboard });
+      res.json({ leaderboard: JSON.parse(cached) });
       return;
     }
   } catch (err) {
-    console.error("Redis cache parse error:", err);
     await redis.del(cacheKey);
   }
 
   const players = await prisma.player.findMany({
     where: { developerId },
     orderBy: { elo: "desc" },
-    select: {
-      id: true,
-      elo: true,
-    },
+    select: { id: true, elo: true },
   });
 
-  const leaderboard: PlayerSummary[] = players.map((p: PlayerRow) => ({
-    playerId: p.id,
-    elo: p.elo,
-  }));
+  const leaderboard = players.map((p) => ({ playerId: p.id, elo: p.elo }));
 
-  await redis.set(cacheKey, JSON.stringify(leaderboard), { ex: 10 });
+  await redis.set(cacheKey, JSON.stringify(leaderboard), { ex: 30 });
 
   res.set("X-Cache", "MISS");
   res.json({ leaderboard });
