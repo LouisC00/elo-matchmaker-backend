@@ -1,9 +1,8 @@
 import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/db";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
 import { v4 as uuidv4 } from "uuid";
 
-const prisma = new PrismaClient();
 let queue: { playerId: number; elo: number }[] = [];
 
 export const joinMatchmaking = async (

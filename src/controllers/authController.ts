@@ -1,11 +1,9 @@
 // authController.ts
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/db";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient();
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;

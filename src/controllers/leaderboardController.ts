@@ -1,10 +1,7 @@
 import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../lib/db";
 import { AuthenticatedRequest } from "../middleware/authMiddleware";
 import redis from "../lib/redis";
-
-const prisma = new PrismaClient();
-
 interface PlayerSummary {
   playerId: number;
   elo: number;
