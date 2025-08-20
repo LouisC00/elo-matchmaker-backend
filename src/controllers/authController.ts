@@ -20,17 +20,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const apiKey = uuidv4();
+  const apiKeyPlain = `ak_live_${uuidv4()}`;
 
   const dev = await prisma.developer.create({
     data: {
       email,
       password: hashedPassword,
-      apiKey,
+      apiKey: apiKeyPlain,
     },
+    select: { id: true, apiKey: true },
   });
 
-  res.json({ message: "Registered successfully", apiKey: dev.apiKey });
+  res.status(201).json({
+    message: "Registered successfully",
+    apiKey: dev.apiKey,
+  });
 };
 
 export const login = async (req: Request, res: Response): Promise<void> => {
